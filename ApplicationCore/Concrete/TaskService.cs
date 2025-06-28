@@ -56,9 +56,13 @@ namespace ApplicationCore.Concrete
                 },
                 UserId = GetUserId(),
             };
+            var user = await _UserReadRepository.Table.FirstOrDefaultAsync(x => x.Id ==GetUserId());
             var result=await _writeRepository.AddAsync(tasks);
+
             if(await _writeRepository.SaveAsync() > 0)
             {
+                var cacheKey = $"List_Tasks_{user.Id}";
+                _memoryCache.Remove(cacheKey);
                 _apiResponse.IsSucces=true;
                 _apiResponse.HttpStatusCode = System.Net.HttpStatusCode.OK;
                 _apiResponse.result = result;   
@@ -131,6 +135,8 @@ namespace ApplicationCore.Concrete
                 await _writeRepository.UpdateAsync(task);
                 if(await _writeRepository.SaveAsync() > 0)
                 {
+                    var cacheKey = $"List_Tasks_{user.Id}";
+                    _memoryCache.Remove(cacheKey);
                     _apiResponse.IsSucces = true;
                     _apiResponse.HttpStatusCode = System.Net.HttpStatusCode.OK;
                     return _apiResponse;
@@ -160,6 +166,8 @@ namespace ApplicationCore.Concrete
                 var tasks = _writeRepository.Delete(id);
                 if(await _writeRepository.SaveAsync() > 0)
                 {
+                    var cacheKey = $"List_Tasks_{user.Id}";
+                    _memoryCache.Remove(cacheKey);
                     _apiResponse.IsSucces = true;
                     _apiResponse.HttpStatusCode = System.Net.HttpStatusCode.OK;
                     return _apiResponse;
