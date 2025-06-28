@@ -52,9 +52,12 @@ namespace ApplicationCore.Concrete
                 },
                 UserId = GetUserId()
             };
+            var user=await _userManager.FindByIdAsync(GetUserId().ToString());
             await _writeHabitRepository.AddAsync(habits);
             if(await _writeHabitRepository.SaveAsync() > 0)
             {
+                var cacheKey = $"List_Habits_{user.Id}";
+                _memoryCache.Remove(cacheKey);
                 _apiResponse.IsSucces=true;
                 _apiResponse.HttpStatusCode = System.Net.HttpStatusCode.OK;
                 _apiResponse.result = habits;
@@ -84,6 +87,8 @@ namespace ApplicationCore.Concrete
             await _writeHabitRepository.UpdateAsync(habits);
             if(await _writeHabitRepository.SaveAsync() > 0)
             {
+                var cacheKey = $"List_Tasks_{user.Id}";
+                _memoryCache.Remove(cacheKey);
                 _apiResponse.IsSucces=true;
                 _apiResponse.HttpStatusCode=System.Net.HttpStatusCode.OK;
                 _apiResponse.result = habits;
@@ -109,6 +114,8 @@ namespace ApplicationCore.Concrete
              _writeHabitRepository.Delete(habits);
             if(await _writeHabitRepository.SaveAsync() > 0)
             {
+                var cacheKey = $"List_Tasks_{user.Id}";
+                _memoryCache.Remove(cacheKey);
                 _apiResponse.IsSucces = true;
                 _apiResponse.HttpStatusCode = System.Net.HttpStatusCode.OK;
                 return _apiResponse;
