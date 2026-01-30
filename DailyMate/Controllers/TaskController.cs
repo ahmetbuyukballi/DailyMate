@@ -16,10 +16,10 @@ namespace DailyMate.Controllers
             _TaskService = taskService;
         }
         [Authorize]
-        [HttpPost("AddTask")]
+        [HttpPost("add-task")]
         public async Task<IActionResult> AddTask(AddTaskDtos models)
         {
-            var result=await _TaskService.AddTasks(models);
+            var result = await _TaskService.AddTasks(models);
             if (result.IsSucces == true)
             {
                 return Ok(result);
@@ -27,11 +27,11 @@ namespace DailyMate.Controllers
             return BadRequest();
         }
         [Authorize]
-        [HttpPut("IsCompleted")]
-       public async Task<IActionResult> IsCompleteds()
+        [HttpPut("is-comleted")]
+        public async Task<IActionResult> IsCompleteds()
         {
             var result = await _TaskService.IsCompleted();
-            if(result.IsSucces == true)
+            if (result.IsSucces == true)
             {
                 return Ok(result);
             }
@@ -39,9 +39,9 @@ namespace DailyMate.Controllers
         }
         [Authorize]
         [HttpPut("UpdateTask")]
-        public async Task<IActionResult> UpdateTask(UpdateTaskDtos models,Guid id)
+        public async Task<IActionResult> UpdateTask(UpdateTaskDtos models, Guid id)
         {
-            var result = await _TaskService.UpdateTasks(models,id);
+            var result = await _TaskService.UpdateTasks(models, id);
             if (result.IsSucces == true)
             {
                 return Ok(result);
@@ -52,8 +52,8 @@ namespace DailyMate.Controllers
         [HttpDelete("DeleteTasks")]
         public async Task<IActionResult> DeleteTasks(Guid id)
         {
-            var result=await _TaskService.DeleteTasks(id);
-            if(result.IsSucces == true)
+            var result = await _TaskService.DeleteTasks(id);
+            if (result.IsSucces == true)
             {
                 return Ok(result);
             }
@@ -63,8 +63,19 @@ namespace DailyMate.Controllers
         [HttpGet("GetTasks")]
         public async Task<IActionResult> GetTasks()
         {
-            var result=await _TaskService.GetTaskCaching();
-            if(result.IsSucces == true)
+            var result = await _TaskService.GetTaskCaching();
+            if (result.IsSucces == true)
+            {
+                return Ok(result);
+            }
+            return BadRequest(result);
+        }
+        [Authorize]
+        [HttpPost("CreateOrderService")]
+        public async Task<IActionResult> CreateTaskService()
+        {
+            var result = await _TaskService.CreateTaskService();
+            if (result.IsSucces == true)
             {
                 return Ok(result);
             }

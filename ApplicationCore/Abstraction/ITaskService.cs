@@ -15,5 +15,6 @@ namespace ApplicationCore.Abstraction
         public Task<ApiResponse> UpdateTasks(UpdateTaskDtos models,Guid id);
         public Task<ApiResponse> DeleteTasks(Guid id);
         public Task<ApiResponse> GetTaskCaching();
+        public Task<ApiResponse> CreateTaskService();
     }
 }
