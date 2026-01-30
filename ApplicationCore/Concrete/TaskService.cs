@@ -1,5 +1,4 @@
 ﻿using ApplicationCore.Abstraction;
-using ApplicationCore.BaseService;
 using Domain;
 using Domain.Dtos;
 using Domain.Entites;
@@ -7,13 +6,8 @@ using Domain.Repository;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.Extensions.Caching.Memory;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Runtime.InteropServices;
 
 namespace ApplicationCore.Concrete
 {
@@ -25,7 +19,8 @@ namespace ApplicationCore.Concrete
         private readonly ApiResponse _apiResponse;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IMemoryCache _memoryCache;
-        public TaskService(IMemoryCache memoryCache,IReadRepository<Tasks> TasksReadRepository,IReadRepository<ApplicationUser> UserreadRepository,IWriteRepository<Tasks> writeRepository,ApiResponse apiResponse,UserManager<ApplicationUser> userManager,IHttpContextAccessor httpContextAccessor) :base(httpContextAccessor)
+        private readonly HttpClient _httpClient;
+        public TaskService(HttpClient httpClient,IMemoryCache memoryCache,IReadRepository<Tasks> TasksReadRepository,IReadRepository<ApplicationUser> UserreadRepository,IWriteRepository<Tasks> writeRepository,ApiResponse apiResponse,UserManager<ApplicationUser> userManager,IHttpContextAccessor httpContextAccessor) :base(httpContextAccessor)
         { 
             _writeRepository = writeRepository;
             _apiResponse = apiResponse;
@@ -33,8 +28,9 @@ namespace ApplicationCore.Concrete
             _UserReadRepository = UserreadRepository;
             _TasksReadRepository = TasksReadRepository;
             _memoryCache = memoryCache;
+            _httpClient = httpClient;
         }
-
+        //exception middleware,kod tekrarlamaları önlencek,base yapıları kurulacak,authorize kontrolleri sağlanacak,isimlere de dikkat edelim,
         public async Task<ApiResponse> AddTasks(AddTaskDtos models)
         {
             if (GetUserId() == null)
@@ -161,6 +157,7 @@ namespace ApplicationCore.Concrete
                 _apiResponse.HttpStatusCode = System.Net.HttpStatusCode.BadRequest;
                 return _apiResponse;
             }
+            var user = await _userManager.FindByIdAsync(GetUserId().ToString());
             if (await _writeRepository.Table.FirstOrDefaultAsync(x => x.Id == id)!=null)
             {
                 var tasks = _writeRepository.Delete(id);
@@ -191,7 +188,7 @@ namespace ApplicationCore.Concrete
             var cacheKey = $"List_Tasks_{user.Id}";
             if (!_memoryCache.TryGetValue(cacheKey, out List<Tasks> tasks)) 
             { 
-                tasks=await _writeRepository.Table.Where(x=>x.UserId==user.Id).ToListAsync();
+                tasks=await _writeRepository.Table.Where(x=>x.UserId==user.Id).AsNoTracking().ToListAsync();
                 _memoryCache.Set(cacheKey, tasks, new MemoryCacheEntryOptions
                 {
                     SlidingExpiration = TimeSpan.FromMinutes(5)
@@ -203,6 +200,40 @@ namespace ApplicationCore.Concrete
             _apiResponse.IsSucces = true;
             return _apiResponse;
         }
+        public async Task<ApiResponse> CreateTaskService()
+        {
+            if (GetUserId() == Guid.Empty)
+            {
+                _apiResponse.IsSucces = false;
+                _apiResponse.ErrorMessage.Add("Kullanıcı girişi yapılmamıştır");
+                _apiResponse.HttpStatusCode = System.Net.HttpStatusCode.BadRequest;
+                return _apiResponse;
+            }
+            var user=await _userManager.FindByIdAsync(GetUserId().ToString());
+            
+            HttpResponseMessage response = await _httpClient.GetAsync("https://localhost:7059/api/OrdersControllers/Create");
+            if (response.IsSuccessStatusCode)
+            {
+                var tasks = new Tasks()
+                {
+                    Title = "Yeni görev geldi",
+                    Description = "Tarım marketinden yeni siparis geldi eklemeyi unutma!",
+                    UserId = GetUserId(),
+                     ActivityDates = new()
+                     {
+                         ActivityType = Domain.Enum.ActivityType.Task,
+                         StartDate=DateOnly.Parse(DateTime.Now.ToString()),
+                     },
+                };
+                _apiResponse.IsSucces=true;
+                _apiResponse.HttpStatusCode=System.Net.HttpStatusCode.OK;
+                return _apiResponse;
+            }
+            _apiResponse.IsSucces=false;
+            _apiResponse.HttpStatusCode = System.Net.HttpStatusCode.BadRequest;
+            return _apiResponse;
+        }
     }
+
 
 }

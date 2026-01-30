@@ -94,6 +94,8 @@ builder.Services.AddScoped(typeof(IWriteRepository<>), typeof(WriteRepository<>)
 builder.Services.AddScoped(typeof(IReadRepository<>), typeof(ReadRepository<>));
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddMemoryCache();
+builder.Services.AddHttpClient(); // Bu satýrý ekle
+
 builder.Services.AddControllers().AddJsonOptions(options =>
 {
     options.JsonSerializerOptions.Converters.Add(new DateOnlyJsonConverter());

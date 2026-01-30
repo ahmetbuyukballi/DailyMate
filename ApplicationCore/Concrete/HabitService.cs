@@ -136,7 +136,7 @@ namespace ApplicationCore.Concrete
                 return _apiResponse;
             }
             var user = await _userManager.FindByIdAsync(GetUserId().ToString());
-            var habits = await _readHabitRepository.Table.Where(x => x.UserId == user.Id).ToListAsync();
+            var habits = await _readHabitRepository.Table.Where(x => x.UserId == user.Id).AsNoTracking().ToListAsync();
             if (habits.Count == null)
             {
                 _apiResponse.ErrorMessage.Add("Kullanıcının herhangi bir hobisi yoktur");
